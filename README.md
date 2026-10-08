@@ -9,6 +9,18 @@ Andén is an independent web app designed to make Belgrano Norte train schedules
 >
 > The app uses scheduled timetable data stored in the project. It does not receive live train positions or delay predictions. Check official information before traveling.
 
+## Screenshots
+
+The screenshots show the app with a sample route from Aristóbulo del Valle to Villa Rosa.
+
+### Desktop
+
+![Andén desktop view](docs/screenshots/desktop.png)
+
+### Mobile
+
+![Andén mobile view](docs/screenshots/mobile.png)
+
 ## Features
 
 - View upcoming departures from a station using the device's local clock.
