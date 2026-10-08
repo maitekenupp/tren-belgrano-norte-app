@@ -256,6 +256,6 @@
   }
 
   loadTimetable().then(() => {
-    window.setInterval(renderSchedule, 30_000);
+    window.setInterval(renderSchedule, 1_000);
   });
 })();
