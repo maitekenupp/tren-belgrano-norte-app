@@ -73,6 +73,7 @@
     selectedStationIndex = index;
     stationSelect.value = String(index);
     if (fullOrigin) fullOrigin.value = String(index);
+    correctDirectionForRoute();
     try {
       localStorage.setItem(lastStationKey, timetable.stations[index]);
     } catch {
@@ -83,6 +84,17 @@
     if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
     renderSchedule();
     renderFullSchedule();
+  }
+
+  function correctDirectionForRoute() {
+    if (selectedStationIndex === null || !fullDestination?.value) return;
+    const destinationIndex = Number(fullDestination.value);
+    if (destinationIndex === selectedStationIndex) {
+      fullDestination.value = "";
+      return;
+    }
+    direction = destinationIndex > selectedStationIndex ? "towardVillaRosa" : "towardRetiro";
+    updateDirectionButtons();
   }
 
   function updateFavoriteControls() {
@@ -311,7 +323,11 @@
   fullOrigin.addEventListener("change", () => {
     if (fullOrigin.value !== "") chooseStation(Number(fullOrigin.value));
   });
-  fullDestination.addEventListener("change", () => renderFullSchedule());
+  fullDestination.addEventListener("change", () => {
+    correctDirectionForRoute();
+    renderSchedule();
+    renderFullSchedule();
+  });
   fullTimes.addEventListener("click", (event) => {
     const row = event.target.closest(".route-time-row");
     if (!row) return;
