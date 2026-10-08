@@ -16,7 +16,12 @@
 
     .favorites-wrap{margin-top:16px;width:100%;min-width:0;max-width:100%}.favorites{display:flex;flex-wrap:wrap;gap:8px;min-width:0;max-width:100%;padding:0 0 5px}.favorites .favorite-chip{flex:0 1 auto;max-width:100%;white-space:normal;text-align:left}.favorites-empty{white-space:normal}
 
-    @media(max-width:760px){.layout,.side{min-width:0}.layout{grid-template-columns:minmax(0,1fr)}.favorites-wrap,.favorites{width:100%;min-width:0;max-width:100%}.favorites{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.favorites .favorite-chip{flex:0 0 auto;max-width:none;white-space:nowrap}.favorites-empty{white-space:nowrap}}
+    .favorites-track{position:relative;min-width:0}.favorites-scroll-btn{display:none}
+
+    @media(max-width:760px){.layout,.side{min-width:0}.layout{grid-template-columns:minmax(0,1fr)}.favorites-wrap,.favorites,.favorites-track{width:100%;min-width:0;max-width:100%}.favorites{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.favorites .favorite-chip{flex:0 0 auto;max-width:none;white-space:nowrap}.favorites-empty{white-space:nowrap}.favorites-scroll-btn{position:absolute;top:0;bottom:5px;z-index:2;display:none;width:27px;padding:0;place-items:center;border:1px solid #e5eaf0;border-radius:9px;background:#fffffff0;color:#364357;font-size:23px;line-height:1;box-shadow:0 1px 5px #15203318}.favorites-scroll-btn.scroll-left{left:0}.favorites-scroll-btn.scroll-right{right:0}.favorites-track.has-more-left .scroll-left,.favorites-track.has-more-right .scroll-right{display:grid}.mobile-direction{display:block;padding:13px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.mobile-direction .recent-title{margin-bottom:8px}.mobile-direction .direction-options{display:grid;grid-template-columns:1fr 1fr}.mobile-direction .direction-options .chip{min-height:44px}}
+
+    .mobile-direction{display:none}
+    @media(max-width:760px){.mobile-direction{display:block}}
 
     .station-name-row{display:flex;align-items:center;gap:7px}.station-name-row .station-name{min-width:0}.station-name-row .favorite-toggle{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;padding:0;font-size:23px;line-height:1}.panelhead>div:first-child{min-width:0}
 

@@ -3,6 +3,7 @@
   const stationSelect = byId("station-select");
   const favoriteToggle = byId("favorite-toggle");
   const favoriteStations = byId("favorite-stations");
+  const favoritesTrack = byId("favorites-track");
   const results = byId("results");
   const stationTitle = byId("station-title");
   const fullSchedule = byId("full-schedule");
@@ -89,6 +90,14 @@
         if (index >= 0) chooseStation(index);
       });
     });
+    updateFavoritesScrollHints();
+  }
+
+  function updateFavoritesScrollHints() {
+    const maxScroll = favoriteStations.scrollWidth - favoriteStations.clientWidth;
+    const canScroll = window.matchMedia("(max-width: 760px)").matches && maxScroll > 2;
+    favoritesTrack.classList.toggle("has-more-left", canScroll && favoriteStations.scrollLeft > 2);
+    favoritesTrack.classList.toggle("has-more-right", canScroll && favoriteStations.scrollLeft < maxScroll - 2);
   }
 
   function toggleFavorite() {
@@ -248,6 +257,14 @@
     chooseStation(Number(stationSelect.value));
   });
   favoriteToggle.addEventListener("click", toggleFavorite);
+  favoriteStations.addEventListener("scroll", updateFavoritesScrollHints, { passive: true });
+  window.addEventListener("resize", updateFavoritesScrollHints);
+  document.querySelectorAll("[data-favorite-scroll]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const amount = Number(button.dataset.favoriteScroll) * Math.max(120, favoriteStations.clientWidth * 0.7);
+      favoriteStations.scrollBy({ left: amount, behavior: "smooth" });
+    });
+  });
   document.querySelectorAll("[data-direction]").forEach((button) => {
     button.addEventListener("click", () => {
       direction = button.dataset.direction;
