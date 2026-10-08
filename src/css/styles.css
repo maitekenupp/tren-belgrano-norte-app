@@ -13,3 +13,5 @@
     @media(max-width:760px){.settings-title{font-size:20px}.station-settings-toggle{padding-right:32px}.settings-content>.intro{margin:8px 0 15px}.direction-options .chip{min-height:46px;font-size:14px}.direction-options .chip.selected-direction{font-size:15px}.panelhead{align-items:center}.refresh{font-size:17px;padding:7px 9px}.station-caption{font-size:9px;letter-spacing:.09em}}
 
     .direction-quick{margin-top:17px;padding-top:14px;border-top:1px solid var(--line)}.direction-quick .recent-title{margin-bottom:8px}.direction-quick .direction-options{display:grid;grid-template-columns:1fr 1fr}
+
+    .favorites-wrap{margin-top:16px}.favorites{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;padding:0 0 5px;scrollbar-width:thin}.favorites .favorite-chip{flex:0 0 auto;white-space:nowrap}.favorites-empty{white-space:nowrap}
