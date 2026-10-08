@@ -173,7 +173,7 @@
       return `<article class="arrival${index === 0 ? " next-arrival" : ""}">
         <div class="time">${escapeHtml(departure.time)}</div>
         <div class="arrival-info"><div class="destination">Tren ${escapeHtml(departure.train)} · hacia ${escapeHtml(destination)}</div>
-        <div class="arrival-date">${escapeHtml(departure.dayLabel)} · ${escapeHtml(timetable.dayTypes[departure.serviceDay])}</div></div>
+        ${departure.dayLabel === "Hoy" ? "" : `<div class="arrival-date">${escapeHtml(departure.dayLabel)} · ${escapeHtml(timetable.dayTypes[departure.serviceDay])}</div>`}</div>
         <div class="countdown"><strong class="${atStation ? "at-station" : ""}">${atStation ? "Tren en estación" : escapeHtml(formatWait(wait))}</strong><span>${atStation ? "salida prevista" : "horario previsto"}</span></div>
       </article>`;
     }).join("")}</div>`;
