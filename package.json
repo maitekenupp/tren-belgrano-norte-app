@@ -1,0 +1,13 @@
+{
+  "name": "tren-belgrano-norte-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consulta de próximos trens do Belgrano Norte entre Retiro e Villa Rosa.",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
