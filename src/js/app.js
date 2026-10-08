@@ -159,13 +159,13 @@
       return;
     }
 
-    results.innerHTML = `<div class="arrivals">${departures.map((departure) => {
+    results.innerHTML = `<div class="arrivals">${departures.map((departure, index) => {
       const wait = Math.max(0, Math.ceil((departure.departureAt.getTime() - now.getTime()) / 60000));
-      return `<article class="arrival">
+      return `<article class="arrival${index === 0 ? " next-arrival" : ""}">
         <div class="time">${escapeHtml(departure.time)}</div>
         <div><div class="destination">Tren ${escapeHtml(departure.train)} · hacia ${escapeHtml(destination)}</div>
         <div class="arrival-date">${escapeHtml(departure.dayLabel)} · ${escapeHtml(timetable.dayTypes[departure.serviceDay])}</div></div>
-        <div class="countdown"><strong>${escapeHtml(formatWait(wait))}</strong>horario previsto</div>
+        <div class="countdown"><strong>${escapeHtml(formatWait(wait))}</strong><span>horario previsto</span></div>
       </article>`;
     }).join("")}</div>`;
   }
