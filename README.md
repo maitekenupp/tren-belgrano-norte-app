@@ -23,14 +23,13 @@ O app não tem dependências externas. Não é necessário executar `npm install
 
 ### Abrir no celular pela mesma rede Wi-Fi
 
-Deixe o computador e o celular conectados à mesma rede. No PowerShell, inicie o servidor aceitando conexões da rede local:
+Deixe o computador e o celular conectados à mesma rede. Inicie o servidor normalmente:
 
 ```powershell
-$env:HOST = "0.0.0.0"
 npm run dev
 ```
 
-No celular, abra `http://IP-DO-COMPUTADOR:4173`. Para encontrar o IP no Windows, execute `ipconfig` e use o endereço IPv4 da conexão Wi-Fi. O servidor precisa continuar aberto no computador enquanto você testa.
+O terminal mostra o endereço da rede local. Abra esse endereço no celular. O servidor precisa continuar aberto no computador enquanto você testa. Se necessário, execute `ipconfig` no Windows e use o IPv4 da conexão Wi-Fi com a porta mostrada no terminal.
 
 Você também pode iniciar com `npm start`. Se a porta 4173 já estiver ocupada, escolha outra no PowerShell:
 
