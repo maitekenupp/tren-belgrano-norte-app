@@ -115,12 +115,14 @@
 
         const [hour, minute] = time.split(":").map(Number);
         const departureAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
-        if (departureAt < now) continue;
+        const stationUntil = departureAt.getTime() + 60_000;
+        if (stationUntil <= now.getTime()) continue;
 
         departures.push({
           train: service.train,
           time,
           departureAt,
+          stationUntil,
           dayLabel: localDateLabel(date, offset),
           serviceDay,
         });
@@ -160,12 +162,13 @@
     }
 
     results.innerHTML = `<div class="arrivals">${departures.map((departure, index) => {
+      const atStation = now.getTime() >= departure.departureAt.getTime() && now.getTime() < departure.stationUntil;
       const wait = Math.max(0, Math.ceil((departure.departureAt.getTime() - now.getTime()) / 60000));
       return `<article class="arrival${index === 0 ? " next-arrival" : ""}">
         <div class="time">${escapeHtml(departure.time)}</div>
         <div class="arrival-info"><div class="destination">Tren ${escapeHtml(departure.train)} · hacia ${escapeHtml(destination)}</div>
         <div class="arrival-date">${escapeHtml(departure.dayLabel)} · ${escapeHtml(timetable.dayTypes[departure.serviceDay])}</div></div>
-        <div class="countdown"><strong>${escapeHtml(formatWait(wait))}</strong><span>horario previsto</span></div>
+        <div class="countdown"><strong class="${atStation ? "at-station" : ""}">${atStation ? "Tren en estación" : escapeHtml(formatWait(wait))}</strong><span>${atStation ? "salida prevista" : "horario previsto"}</span></div>
       </article>`;
     }).join("")}</div>`;
   }
