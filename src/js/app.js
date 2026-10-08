@@ -64,6 +64,7 @@
     stationSelect.value = String(index);
     favoriteToggle.disabled = false;
     updateFavoriteControls();
+    if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
     renderSchedule();
   }
 
@@ -153,7 +154,11 @@
     const departures = getUpcomingDepartures(now);
 
     stationTitle.textContent = station;
-    byId("local-clock").innerHTML = `Hora local <span class="clock-reading">${new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(now)}</span>`;
+    byId("local-clock").textContent = new Intl.DateTimeFormat("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(now);
     setStatus(`${dayLabel} · hacia ${destination}`, true);
 
     if (!departures.length) {
