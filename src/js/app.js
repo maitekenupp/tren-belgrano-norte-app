@@ -29,6 +29,7 @@
   let direction = "towardVillaRosa";
   let fullScheduleDay = null;
   const favoritesKey = "anden-belgrano-norte-favorites";
+  const lastStationKey = "anden-belgrano-norte-last-station";
   let favorites = loadFavorites();
 
   function loadFavorites() {
@@ -69,6 +70,11 @@
   function chooseStation(index) {
     selectedStationIndex = index;
     stationSelect.value = String(index);
+    try {
+      localStorage.setItem(lastStationKey, timetable.stations[index]);
+    } catch {
+      // The station still works when browser storage is unavailable.
+    }
     favoriteToggle.disabled = false;
     updateFavoriteControls();
     if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
@@ -220,9 +226,9 @@
       : '<p class="full-empty">No hay horarios para esta estación y este sentido.</p>';
   }
 
-  function updateDirectionButtons(activeButton) {
+  function updateDirectionButtons() {
     document.querySelectorAll("[data-direction]").forEach((button) => {
-      const isSelected = button === activeButton;
+      const isSelected = button.dataset.direction === direction;
       button.setAttribute("aria-pressed", String(isSelected));
       button.classList.toggle("selected-direction", isSelected);
     });
@@ -237,8 +243,16 @@
       stationSelect.innerHTML = '<option value="">Elige una estación…</option>' + timetable.stations
         .map((name, index) => `<option value="${index}">${escapeHtml(name)}</option>`).join("");
       favorites = favorites.filter((name) => timetable.stations.includes(name));
-      updateFavoriteControls();
       setStatus(`Horario ${timetable.source.title} cargado · ${timetable.stations.length} estaciones`, true);
+      let savedStation = null;
+      try {
+        savedStation = localStorage.getItem(lastStationKey);
+      } catch {
+        // The timetable remains usable when browser storage is unavailable.
+      }
+      const savedStationIndex = timetable.stations.indexOf(savedStation);
+      if (savedStationIndex >= 0) chooseStation(savedStationIndex);
+      else updateFavoriteControls();
     } catch (error) {
       setStatus("No se pudo cargar el horario local.");
       results.innerHTML = '<div class="error"><strong>No pudimos abrir la tabla de horarios.</strong><br>Comprueba que src/data/schedule.json esté en la carpeta del proyecto.</div>';
@@ -248,6 +262,11 @@
   stationSelect.addEventListener("change", () => {
     if (stationSelect.value === "") {
       selectedStationIndex = null;
+      try {
+        localStorage.removeItem(lastStationKey);
+      } catch {
+        // Clearing the selection remains available without browser storage.
+      }
       favoriteToggle.disabled = true;
       favoriteToggle.textContent = "☆";
       favoriteToggle.setAttribute("aria-pressed", "false");
@@ -271,7 +290,7 @@
   document.querySelectorAll("[data-direction]").forEach((button) => {
     button.addEventListener("click", () => {
       direction = button.dataset.direction;
-      updateDirectionButtons(button);
+      updateDirectionButtons();
       renderSchedule();
       renderFullSchedule();
     });
@@ -318,7 +337,7 @@
           if (input.direction) {
             direction = input.direction;
             const directionButton = document.querySelector(`[data-direction="${direction}"]`);
-            if (directionButton) updateDirectionButtons(directionButton);
+            if (directionButton) updateDirectionButtons();
           }
           if (input.serviceDay) dayMode.value = input.serviceDay;
           const match = timetable.stations.findIndex((name) => normalize(name) === normalize(String(input.station || ""))
