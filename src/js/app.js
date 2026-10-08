@@ -8,8 +8,6 @@
   const status = byId("feed-status");
   const dayMode = byId("day-mode");
 
-  if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
-
   const directionLabels = {
     towardVillaRosa: "Villa Rosa",
     towardRetiro: "Retiro",
