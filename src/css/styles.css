@@ -16,6 +16,6 @@
 
     .favorites-wrap{margin-top:16px}.favorites{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;padding:0 0 5px;scrollbar-width:thin}.favorites .favorite-chip{flex:0 0 auto;white-space:nowrap}.favorites-empty{white-space:nowrap}
 
-    .station-name-row{display:flex;align-items:center;gap:7px}.station-name-row .station-name{min-width:0}.station-name-row .favorite-toggle{flex:0 0 34px;width:34px;height:34px;font-size:23px}.panelhead>div:first-child{min-width:0}
+    .station-name-row{display:flex;align-items:center;gap:7px}.station-name-row .station-name{min-width:0}.station-name-row .favorite-toggle{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;padding:0;font-size:23px;line-height:1}.panelhead>div:first-child{min-width:0}
 
     @media(max-width:760px){.station-name-row{gap:5px}.station-name-row .station-name{font-size:clamp(17px,5.5vw,21px);overflow-wrap:anywhere}.station-name-row .favorite-toggle{flex-basis:32px;width:32px;height:32px;font-size:21px}.refresh{font-size:15px;padding:6px 7px}}
