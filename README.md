@@ -1,107 +1,49 @@
 # Andén — Belgrano Norte
 
-App web para escolher uma das 23 estações e o sentido do trem no ramal Belgrano Norte, entre Retiro e Villa Rosa. Calcula os próximos horários programados comparando a tabela local com o relógio do dispositivo.
+[![Abrir app](https://img.shields.io/badge/demo-abrir%20app-2563eb)](https://tren-belgrano-norte-app.pages.dev)
+[![Licença: MIT](https://img.shields.io/badge/licença-MIT-green.svg)](LICENSE) · [Código no GitHub](https://github.com/maitekenupp/tren-belgrano-norte-app)
 
-## Requisitos
+Andén é um app web independente para consultar mais rápido os horários previstos do trem Belgrano Norte. A ideia é ver tanto as próximas partidas de uma estação quanto os horários futuros de uma viagem entre duas estações, sem precisar procurar manualmente em uma tabela extensa.
 
-- Node.js 18 ou superior
+> **Abrir o app:** [tren-belgrano-norte-app.pages.dev](https://tren-belgrano-norte-app.pages.dev)
+>
+> Os horários são programados e vêm da tabela local do projeto. O app não recebe dados de posição nem informações de atraso em tempo real. Confira sempre as informações oficiais antes de viajar.
 
-O app não tem dependências externas. Não é necessário executar `npm install`.
+## O que dá para fazer
 
-## Rodar no computador
+- Ver as próximas partidas a partir de uma estação, considerando o relógio local do dispositivo.
+- Consultar horários futuros de uma estação por dia de serviço: dias úteis, sábados e domingos/feriados.
+- Escolher origem e destino para comparar a hora de saída e a hora prevista de chegada.
+- Corrigir automaticamente o sentido do trem de acordo com a ordem das estações.
+- Salvar estações favoritas no navegador.
+- Usar o layout em computador ou celular.
 
-1. Abra a pasta `tren-belgrano-norte-app` no Visual Studio Code.
-2. Abra o terminal integrado do VS Code.
-3. Execute:
+## Rodar localmente
 
-   ```bash
-   npm run dev
-   ```
+**Requisitos:** Node.js 18 ou superior. O app não usa dependências externas.
 
-4. Acesse [http://localhost:4173](http://localhost:4173).
-5. Para encerrar o servidor, pressione `Ctrl+C` no terminal.
-
-### Abrir no celular pela mesma rede Wi-Fi
-
-Deixe o computador e o celular conectados à mesma rede. Inicie o servidor normalmente:
-
-```powershell
+```bash
+git clone https://github.com/maitekenupp/tren-belgrano-norte-app.git
+cd tren-belgrano-norte-app
 npm run dev
 ```
 
-O terminal mostra o endereço da rede local. Abra esse endereço no celular. O servidor precisa continuar aberto no computador enquanto você testa. Se necessário, execute `ipconfig` no Windows e use o IPv4 da conexão Wi-Fi com a porta mostrada no terminal.
+Abra [http://localhost:4173](http://localhost:4173). Para encerrar o servidor, pressione `Ctrl+C` no terminal.
 
-Você também pode iniciar com `npm start`. Se a porta 4173 já estiver ocupada, escolha outra no PowerShell:
+Para testar pelo celular na mesma rede Wi-Fi, abra o endereço de rede local mostrado pelo servidor no terminal, mantendo o computador ligado e o servidor ativo.
 
-```powershell
-$env:PORT = 4174
-npm run dev
-```
+## Como os horários funcionam
 
-Depois abra `http://localhost:4174`.
+A tabela está em `src/data/schedule.json`, organizada por estação, sentido e dia de serviço. O app compara essas horas com o relógio do dispositivo para calcular a contagem regressiva e exibe as partidas futuras. A comparação origem-destino usa os horários previstos do mesmo trem nas duas estações.
 
-## Estrutura
+Os horários atualmente incluídos foram transcritos do **Horario N° 21**, com vigência indicada a partir de 19/05/2026. Eles não representam o movimento real dos trens e podem ficar desatualizados.
 
-```text
-tren-belgrano-norte-app/
-├── .vscode/
-│   └── settings.json
-├── scripts/
-│   └── import_schedule.py
-├── src/
-│   ├── css/
-│   │   └── styles.css
-│   ├── data/
-│   │   └── schedule.json
-│   ├── js/
-│   │   └── app.js
-│   └── index.html
-├── .gitignore
-├── package.json
-├── README.md
-├── requirements-import.txt
-└── server.js
-```
+## Tecnologias
 
-- `src/index.html`: estrutura e conteúdo da página.
-- `src/css/styles.css`: estilos e layout responsivo.
-- `src/js/app.js`: busca da estação, sentido, dia de serviço e cálculo dos próximos horários.
-- `src/data/schedule.json`: horários por estação, dia e sentido.
-- `server.js`: servidor local feito com módulos nativos do Node.js.
-- `scripts/import_schedule.py`: extrator para gerar o JSON a partir do PDF de horários.
+- HTML, CSS e JavaScript sem framework
+- Node.js com módulos nativos para servir o app localmente
+- JSON para a tabela de horários
 
-## Como o app escolhe os próximos trens
+## Licença
 
-- Usa a hora e o fuso local do computador ou celular que abriu a página.
-- Atualiza o relógio e a contagem regressiva a cada segundo.
-- A estação é escolhida em um menu suspenso; toque na estrela para salvar ou remover uma estação de **Favoritas**. Essa lista fica salva no navegador do dispositivo.
-- O app restaura a última estação consultada no mesmo navegador e dispositivo.
-- Em modo automático, escolhe dias úteis, sábado ou domingo pelo calendário local.
-- Em feriados que caem durante a semana, selecione manualmente **Domingo o feriado**. O app não consulta um calendário online.
-- A lista mostra os próximos quatro horários da estação e do sentido escolhidos, incluindo minutos restantes.
-- Abaixo da lista, **Horario completo** permite consultar todos os horários daquela estação e sentido, em abas de dias úteis, sábado e domingo/feriados. A tabela mostra somente as horas, sem números de trem.
-- Os horários são os programados no **Horario N° 21**, vigente desde 19/05/2026. Não são posições do trem nem previsão de atraso em tempo real.
-
-## Atualizar a tabela a partir de outro PDF
-
-O app funciona apenas com `schedule.json`; Python só é necessário para importar uma nova tabela. Com Python instalado:
-
-```powershell
-python -m pip install -r requirements-import.txt
-python scripts/import_schedule.py "..\horarios-tren-belgrano-norte.pdf"
-```
-
-O script lê as tabelas de dias úteis, sábados, domingos/feriados e os dois sentidos, e atualiza `src/data/schedule.json`.
-
-## Criar o repositório privado no GitHub
-
-Instale e autentique o GitHub CLI (`gh`) antes de executar estes comandos. No PowerShell, a partir da pasta do projeto:
-
-```powershell
-git init -b main
-git add .
-git commit -m "Initial commit"
-gh repo create tren-belgrano-norte-app --private --source=. --remote=origin --push
-```
-
-O parâmetro `--private` cria o repositório privado. O último comando configura `origin` e envia o commit inicial.
+O código original do app é distribuído sob a licença MIT: você pode usar, copiar, modificar e redistribuí-lo conforme os termos de [LICENSE](LICENSE). O arquivo `src/data/schedule.json` contém horários transcritos de uma tabela ferroviária de terceiros; confirme as condições da fonte original antes de reutilizar ou redistribuir esses dados.
