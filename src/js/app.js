@@ -185,7 +185,6 @@
       button.setAttribute("aria-pressed", String(isSelected));
       button.classList.toggle("selected-direction", isSelected);
     });
-    byId("settings-direction").textContent = `Hacia ${directionLabels[direction]}`;
   }
 
   async function loadTimetable() {
