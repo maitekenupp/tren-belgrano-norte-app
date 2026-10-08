@@ -8,6 +8,8 @@
   const stationTitle = byId("station-title");
   const fullSchedule = byId("full-schedule");
   const fullTimes = byId("full-times");
+  const fullOrigin = byId("full-origin");
+  const fullDestination = byId("full-destination");
   const fullTabs = Array.from(document.querySelectorAll("[data-full-day]"));
   const status = byId("feed-status");
   const dayMode = byId("day-mode");
@@ -70,6 +72,7 @@
   function chooseStation(index) {
     selectedStationIndex = index;
     stationSelect.value = String(index);
+    if (fullOrigin) fullOrigin.value = String(index);
     try {
       localStorage.setItem(lastStationKey, timetable.stations[index]);
     } catch {
@@ -218,12 +221,26 @@
     });
     byId("full-schedule-panel").setAttribute("aria-labelledby", fullTabs.find((tab) => tab.dataset.fullDay === activeDay).id);
 
-    const times = [...new Set(timetable.days[activeDay][direction]
-      .map((service) => service.times[selectedStationIndex])
-      .filter(Boolean))].sort();
-    fullTimes.innerHTML = times.length
-      ? times.map((time) => `<time class="full-time" datetime="${time}">${escapeHtml(time)}</time>`).join("")
-      : '<p class="full-empty">No hay horarios para esta estación y este sentido.</p>';
+    const originIndex = fullOrigin?.value === "" || fullOrigin?.value === undefined
+      ? selectedStationIndex : Number(fullOrigin.value);
+    const destinationIndex = fullDestination?.value ? Number(fullDestination.value) : null;
+    const services = timetable.days[activeDay][direction];
+    const trips = services.map((service) => ({
+      departure: service.times[originIndex],
+      arrival: destinationIndex === null ? null : service.times[destinationIndex],
+    })).filter((trip) => {
+      if (!trip.departure) return false;
+      if (destinationIndex === null) return true;
+      const travelsForward = direction === "towardVillaRosa"
+        ? destinationIndex > originIndex : destinationIndex < originIndex;
+      return travelsForward && Boolean(trip.arrival);
+    }).sort((a, b) => a.departure.localeCompare(b.departure));
+    fullTimes.classList.toggle("departure-grid", destinationIndex === null);
+    fullTimes.innerHTML = trips.length
+      ? trips.map((trip) => destinationIndex === null
+        ? `<div class="route-time-row single-departure" tabindex="0" role="button" aria-pressed="false" aria-label="Horario de salida ${escapeHtml(trip.departure)}"><time class="full-time" datetime="${trip.departure}">${escapeHtml(trip.departure)}</time></div>`
+        : `<div class="route-time-row" tabindex="0" role="button" aria-pressed="false" aria-label="Salida ${escapeHtml(trip.departure)}, llegada ${escapeHtml(trip.arrival)}"><div class="route-time-point"><span>Salida</span><time class="full-time" datetime="${trip.departure}">${escapeHtml(trip.departure)}</time></div><span class="route-arrow" aria-hidden="true">→</span><div class="route-time-point"><span>Llegada</span><time class="full-time" datetime="${trip.arrival}">${escapeHtml(trip.arrival)}</time></div></div>`).join("")
+      : `<p class="full-empty">${destinationIndex === null ? "No hay salidas para esta estación y este sentido." : "No hay viajes directos entre estas estaciones en este sentido."}</p>`;
   }
 
   function updateDirectionButtons() {
@@ -241,6 +258,10 @@
       timetable = await response.json();
       if (timetable.stations.length !== 23) throw new Error("La tabla no tiene 23 estaciones.");
       stationSelect.innerHTML = '<option value="">Elige una estación…</option>' + timetable.stations
+        .map((name, index) => `<option value="${index}">${escapeHtml(name)}</option>`).join("");
+      fullOrigin.innerHTML = timetable.stations
+        .map((name, index) => `<option value="${index}">${escapeHtml(name)}</option>`).join("");
+      fullDestination.innerHTML = '<option value="">Elige una estación</option>' + timetable.stations
         .map((name, index) => `<option value="${index}">${escapeHtml(name)}</option>`).join("");
       favorites = favorites.filter((name) => timetable.stations.includes(name));
       setStatus(`Horario ${timetable.source.title} cargado · ${timetable.stations.length} estaciones`, true);
@@ -287,9 +308,40 @@
       favoriteStations.scrollBy({ left: amount, behavior: "smooth" });
     });
   });
+  fullOrigin.addEventListener("change", () => {
+    if (fullOrigin.value !== "") chooseStation(Number(fullOrigin.value));
+  });
+  fullDestination.addEventListener("change", () => renderFullSchedule());
+  fullTimes.addEventListener("click", (event) => {
+    const row = event.target.closest(".route-time-row");
+    if (!row) return;
+    const wasSelected = row.classList.contains("selected-route-time");
+    fullTimes.querySelectorAll(".route-time-row").forEach((item) => {
+      item.classList.remove("selected-route-time");
+      item.setAttribute("aria-pressed", "false");
+    });
+    if (!wasSelected) {
+      row.classList.add("selected-route-time");
+      row.setAttribute("aria-pressed", "true");
+    }
+  });
+  fullTimes.addEventListener("keydown", (event) => {
+    if ((event.key === "Enter" || event.key === " ") && event.target.matches(".route-time-row")) {
+      event.preventDefault();
+      event.target.click();
+    }
+  });
   document.querySelectorAll("[data-direction]").forEach((button) => {
     button.addEventListener("click", () => {
-      direction = button.dataset.direction;
+      const nextDirection = button.dataset.direction;
+      if (nextDirection === direction) return;
+      const previousOrigin = selectedStationIndex;
+      const previousDestination = fullDestination.value === "" ? null : Number(fullDestination.value);
+      direction = nextDirection;
+      if (previousOrigin !== null && previousDestination !== null) {
+        fullDestination.value = String(previousOrigin);
+        chooseStation(previousDestination);
+      }
       updateDirectionButtons();
       renderSchedule();
       renderFullSchedule();
