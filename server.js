@@ -4,6 +4,7 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "src");
 const port = Number(process.env.PORT) || 4173;
+const host = process.env.HOST || "127.0.0.1";
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -44,8 +45,9 @@ const server = http.createServer((request, response) => {
   });
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`Andén local disponível em http://localhost:${port}`);
+server.listen(port, host, () => {
+  console.log(`Andén local disponível em http://${host === "0.0.0.0" ? "localhost" : host}:${port}`);
+  if (host === "0.0.0.0") console.log("Acesso pela rede local habilitado; use o IP deste computador no celular.");
   console.log("Pressione Ctrl+C para encerrar.");
 });
 
