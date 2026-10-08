@@ -63,6 +63,7 @@ tren-belgrano-norte-app/
 ## Como o app escolhe os próximos trens
 
 - Usa a hora e o fuso local do computador ou celular que abriu a página.
+- A estação é escolhida em um menu suspenso; toque na estrela para salvar ou remover uma estação de **Favoritas**. Essa lista fica salva no navegador do dispositivo.
 - Em modo automático, escolhe dias úteis, sábado ou domingo pelo calendário local.
 - Em feriados que caem durante a semana, selecione manualmente **Domingo o feriado**. O app não consulta um calendário online.
 - A lista mostra os próximos quatro horários da estação e do sentido escolhidos, incluindo minutos restantes.

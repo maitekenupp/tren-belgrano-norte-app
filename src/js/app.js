@@ -1,6 +1,8 @@
 (() => {
   const byId = (id) => document.getElementById(id);
-  const stationInput = byId("station-search");
+  const stationSelect = byId("station-select");
+  const favoriteToggle = byId("favorite-toggle");
+  const favoriteStations = byId("favorite-stations");
   const results = byId("results");
   const stationTitle = byId("station-title");
   const status = byId("feed-status");
@@ -19,6 +21,17 @@
   let timetable = null;
   let selectedStationIndex = null;
   let direction = "towardVillaRosa";
+  const favoritesKey = "anden-belgrano-norte-favorites";
+  let favorites = loadFavorites();
+
+  function loadFavorites() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+      return Array.isArray(saved) ? saved.filter((name) => typeof name === "string") : [];
+    } catch {
+      return [];
+    }
+  }
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (character) => ({
@@ -46,40 +59,38 @@
     return "weekday";
   }
 
-  function getMatchingStations(query) {
-    const normalizedQuery = normalize(query.trim());
-    if (!normalizedQuery || !timetable) return [];
-    return timetable.stations
-      .map((name, index) => ({ name, index }))
-      .filter(({ name }) => [name, ...(stationAliases[name] || [])]
-        .some((candidate) => normalize(candidate).includes(normalizedQuery)));
-  }
-
-  function chooseStation(station) {
-    selectedStationIndex = station.index;
-    stationInput.value = station.name;
+  function chooseStation(index) {
+    selectedStationIndex = index;
+    stationSelect.value = String(index);
+    favoriteToggle.disabled = false;
+    updateFavoriteControls();
     renderSchedule();
   }
 
-  function searchStation() {
-    if (!timetable) return;
-    const matches = getMatchingStations(stationInput.value);
-    if (matches.length === 1) {
-      chooseStation(matches[0]);
-      return;
-    }
+  function updateFavoriteControls() {
+    const selectedName = selectedStationIndex === null ? null : timetable.stations[selectedStationIndex];
+    const isFavorite = selectedName !== null && favorites.includes(selectedName);
+    favoriteToggle.textContent = isFavorite ? "★" : "☆";
+    favoriteToggle.setAttribute("aria-pressed", String(isFavorite));
+    favoriteToggle.setAttribute("aria-label", isFavorite ? "Quitar estación de Favoritas" : "Marcar estación como favorita");
 
-    if (!matches.length) {
-      results.innerHTML = '<div class="empty"><strong>No encontramos esa estación</strong>Busca una de las 23 estaciones del Belgrano Norte.</div>';
-      return;
-    }
-
-    results.innerHTML = `<div class="empty"><strong>Elige una estación</strong><div class="recent match-list">${matches
-      .map((station, index) => `<button class="chip" data-match="${index}">${escapeHtml(station.name)}</button>`)
-      .join("")}</div></div>`;
-    results.querySelectorAll("[data-match]").forEach((button) => {
-      button.addEventListener("click", () => chooseStation(matches[Number(button.dataset.match)]));
+    favoriteStations.innerHTML = favorites.length
+      ? favorites.map((name) => `<button class="chip favorite-chip${name === selectedName ? " active-favorite" : ""}" data-favorite="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("")
+      : '<span class="favorites-empty">Tus estaciones favoritas aparecerán aquí.</span>';
+    favoriteStations.querySelectorAll("[data-favorite]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = timetable.stations.indexOf(button.dataset.favorite);
+        if (index >= 0) chooseStation(index);
+      });
     });
+  }
+
+  function toggleFavorite() {
+    if (selectedStationIndex === null) return;
+    const name = timetable.stations[selectedStationIndex];
+    favorites = favorites.includes(name) ? favorites.filter((favorite) => favorite !== name) : [...favorites, name];
+    localStorage.setItem(favoritesKey, JSON.stringify(favorites));
+    updateFavoriteControls();
   }
 
   function localDateLabel(date, offset) {
@@ -173,6 +184,10 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       timetable = await response.json();
       if (timetable.stations.length !== 23) throw new Error("La tabla no tiene 23 estaciones.");
+      stationSelect.innerHTML = '<option value="">Elige una estación…</option>' + timetable.stations
+        .map((name, index) => `<option value="${index}">${escapeHtml(name)}</option>`).join("");
+      favorites = favorites.filter((name) => timetable.stations.includes(name));
+      updateFavoriteControls();
       setStatus(`Horario ${timetable.source.title} cargado · ${timetable.stations.length} estaciones`, true);
     } catch (error) {
       setStatus("No se pudo cargar el horario local.");
@@ -180,16 +195,20 @@
     }
   }
 
-  byId("search-button").addEventListener("click", searchStation);
-  stationInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") searchStation();
+  stationSelect.addEventListener("change", () => {
+    if (stationSelect.value === "") {
+      selectedStationIndex = null;
+      favoriteToggle.disabled = true;
+      favoriteToggle.textContent = "☆";
+      favoriteToggle.setAttribute("aria-pressed", "false");
+      stationTitle.textContent = "Elige una estación";
+      results.innerHTML = '<div class="empty"><strong>Tu tren, desde tu estación</strong>Selecciona una parada para ver las próximas salidas según el horario local de tu dispositivo.</div>';
+      updateFavoriteControls();
+      return;
+    }
+    chooseStation(Number(stationSelect.value));
   });
-  document.querySelectorAll("[data-query]").forEach((button) => {
-    button.addEventListener("click", () => {
-      stationInput.value = button.dataset.query;
-      searchStation();
-    });
-  });
+  favoriteToggle.addEventListener("click", toggleFavorite);
   document.querySelectorAll("[data-direction]").forEach((button) => {
     button.addEventListener("click", () => {
       direction = button.dataset.direction;
@@ -225,8 +244,9 @@
             if (directionButton) updateDirectionButtons(directionButton);
           }
           if (input.serviceDay) dayMode.value = input.serviceDay;
-          stationInput.value = String(input.station || "");
-          searchStation();
+          const match = timetable.stations.findIndex((name) => normalize(name) === normalize(String(input.station || ""))
+            || (stationAliases[name] || []).some((alias) => normalize(alias) === normalize(String(input.station || ""))));
+          if (match >= 0) chooseStation(match);
           return { station: stationTitle.textContent, direction, departures: results.innerText.slice(0, 1200) };
         },
       }, { signal: controller.signal });
