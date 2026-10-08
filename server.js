@@ -8,6 +8,7 @@ const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",
   ".ico": "image/x-icon",
@@ -46,4 +47,13 @@ const server = http.createServer((request, response) => {
 server.listen(port, "127.0.0.1", () => {
   console.log(`Andén local disponível em http://localhost:${port}`);
   console.log("Pressione Ctrl+C para encerrar.");
+});
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`A porta ${port} já está em uso. No PowerShell, tente: $env:PORT = 4174; npm run dev`);
+  } else {
+    console.error(`Não foi possível iniciar o servidor: ${error.message}`);
+  }
+  process.exitCode = 1;
 });

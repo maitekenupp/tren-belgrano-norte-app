@@ -1,14 +1,241 @@
-(()=>{
-    const $=id=>document.getElementById(id);const stops=['Retiro','Saldías','Ciudad Universitaria','Aristóbulo del Valle','M. M. Padilla','Florida','Munro','Carapachay','Villa Adelina','Boulogne Sur Mer','Vice Alte. Montes','Don Torcuato','A. Sourdeaux','Villa de Mayo','Los Polvorines','Ing. Pablo Nogués','Grand Bourg','Tierras Altas','Tortuguitas','Manuel Alberti','Del Viso','Villa Rosa'].map((name,index)=>({id:index,name,aliases:name==='Aristóbulo del Valle'?['A. Del Valle']:[]}));let selected=null,direction='Villa Rosa';
-    const title=$('station-title'),results=$('results'),status=$('feed-status'),input=$('station-search');
-    function setStatus(message,live=false){status.innerHTML='<span class="statusdot '+(live?'live':'')+'"></span><span>'+message+'</span>'}
-    function norm(text){return text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
-    function findStations(q){return stops.filter(s=>[s.name,...s.aliases].some(name=>norm(name).includes(norm(q)))).slice(0,8)}
-    function pickStation(s){selected=s;input.value=s.name;render()}
-    function search(){const q=input.value.trim();if(!q)return;const matches=findStations(q);if(matches.length===1){pickStation(matches[0]);return}if(!matches.length){results.innerHTML='<div class="empty"><strong>No encontramos esa estación</strong>Busca una de las 22 paradas del Belgrano Norte.</div>';return}results.innerHTML='<div class="empty"><strong>Elige una estación</strong><div class="recent" style="justify-content:center;margin-top:14px">'+matches.map((s,i)=>'<button class="chip" data-result="'+i+'">'+escapeHtml(s.name)+'</button>').join('')+'</div></div>';results.querySelectorAll('[data-result]').forEach(b=>b.addEventListener('click',()=>pickStation(matches[Number(b.dataset.result)])))}
-    function escapeHtml(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-    function render(){if(!selected)return;title.textContent=selected.name;setStatus('Servicio '+selected.name+' → '+direction);const link='https://proximostrenes.ferrovias.com.ar/';const schedule='https://www.ferrovias.com.ar/imgs/MuralH21.pdf';results.innerHTML='<div class="empty"><strong>Desde '+escapeHtml(selected.name)+' hacia '+escapeHtml(direction)+'</strong>Abre el tablero oficial para consultar los próximos trenes y el horario publicado por Ferrovías.<div class="recent" style="justify-content:center;margin-top:18px"><a class="find" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:0 16px;width:auto" href="'+link+'" target="_blank" rel="noreferrer">Ver próximos trenes ↗</a><a class="refresh" style="display:inline-flex;align-items:center;text-decoration:none" href="'+schedule+'" target="_blank" rel="noreferrer">Horario del ramal ↗</a></div></div>'}
-    document.querySelectorAll('[data-direction]').forEach(b=>b.addEventListener('click',()=>{direction=b.dataset.direction;document.querySelectorAll('[data-direction]').forEach(x=>{x.setAttribute('aria-pressed',String(x===b));x.classList.toggle('selected-direction',x===b)});render()}));
-    $('search-button').addEventListener('click',search);input.addEventListener('keydown',e=>{if(e.key==='Enter')search()});document.querySelectorAll('[data-query]').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.query;search()}));
-    if(document.modelContext?.registerTool){const controller=new AbortController();try{document.modelContext.registerTool({name:'select_belgrano_norte_station',title:'Elegir estación del Belgrano Norte',description:'Selecciona una de las estaciones entre Retiro y Villa Rosa y consulta los enlaces oficiales de arribos y horarios.',inputSchema:{type:'object',properties:{station:{type:'string',description:'Nombre de una estación del Belgrano Norte'}},required:['station'],additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},async execute({station}){input.value=String(station||'');search();return {station:title.textContent,direction,details:results.innerText.slice(0,1200)}}},{signal:controller.signal})}catch(e){}}
-  })();
+(() => {
+  const byId = (id) => document.getElementById(id);
+  const stationInput = byId("station-search");
+  const results = byId("results");
+  const stationTitle = byId("station-title");
+  const status = byId("feed-status");
+  const dayMode = byId("day-mode");
+
+  const directionLabels = {
+    towardVillaRosa: "Villa Rosa",
+    towardRetiro: "Retiro",
+  };
+  const stationAliases = {
+    "Aristóbulo del Valle": ["A. del Valle", "Aristobulo del Valle"],
+    "Boulogne Sur Mer": ["Boulogne", "Montes"],
+    "Manuel Alberti": ["M. Alberti"],
+  };
+
+  let timetable = null;
+  let selectedStationIndex = null;
+  let direction = "towardVillaRosa";
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[character]);
+  }
+
+  function normalize(value) {
+    return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function setStatus(message, isReady = false) {
+    status.innerHTML = `<span class="statusdot ${isReady ? "live" : ""}"></span><span>${escapeHtml(message)}</span>`;
+  }
+
+  function getServiceDay(date) {
+    if (dayMode.value !== "auto") return dayMode.value;
+    const weekday = date.getDay();
+    if (weekday === 0) return "sundayHoliday";
+    if (weekday === 6) return "saturday";
+    return "weekday";
+  }
+
+  function getMatchingStations(query) {
+    const normalizedQuery = normalize(query.trim());
+    if (!normalizedQuery || !timetable) return [];
+    return timetable.stations
+      .map((name, index) => ({ name, index }))
+      .filter(({ name }) => [name, ...(stationAliases[name] || [])]
+        .some((candidate) => normalize(candidate).includes(normalizedQuery)));
+  }
+
+  function chooseStation(station) {
+    selectedStationIndex = station.index;
+    stationInput.value = station.name;
+    renderSchedule();
+  }
+
+  function searchStation() {
+    if (!timetable) return;
+    const matches = getMatchingStations(stationInput.value);
+    if (matches.length === 1) {
+      chooseStation(matches[0]);
+      return;
+    }
+
+    if (!matches.length) {
+      results.innerHTML = '<div class="empty"><strong>No encontramos esa estación</strong>Busca una de las 23 estaciones del Belgrano Norte.</div>';
+      return;
+    }
+
+    results.innerHTML = `<div class="empty"><strong>Elige una estación</strong><div class="recent match-list">${matches
+      .map((station, index) => `<button class="chip" data-match="${index}">${escapeHtml(station.name)}</button>`)
+      .join("")}</div></div>`;
+    results.querySelectorAll("[data-match]").forEach((button) => {
+      button.addEventListener("click", () => chooseStation(matches[Number(button.dataset.match)]));
+    });
+  }
+
+  function localDateLabel(date, offset) {
+    if (offset === 0) return "Hoy";
+    if (offset === 1) return "Mañana";
+    return new Intl.DateTimeFormat("es-AR", { weekday: "short", day: "2-digit", month: "2-digit" }).format(date);
+  }
+
+  function getUpcomingDepartures(now) {
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const departures = [];
+
+    for (let offset = 0; offset < 8 && departures.length < 4; offset += 1) {
+      const date = new Date(midnight);
+      date.setDate(midnight.getDate() + offset);
+      const serviceDay = getServiceDay(date);
+      const services = timetable.days[serviceDay][direction];
+
+      for (const service of services) {
+        const time = service.times[selectedStationIndex];
+        if (!time) continue; // Blank cells in the PDF mean this train does not stop here.
+
+        const [hour, minute] = time.split(":").map(Number);
+        const departureAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
+        if (departureAt < now) continue;
+
+        departures.push({
+          train: service.train,
+          time,
+          departureAt,
+          dayLabel: localDateLabel(date, offset),
+          serviceDay,
+        });
+      }
+      departures.sort((a, b) => a.departureAt - b.departureAt);
+    }
+
+    return departures.slice(0, 4);
+  }
+
+  function formatWait(minutes) {
+    if (minutes <= 0) return "Ahora";
+    if (minutes < 60) return `en ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder ? `en ${hours} h ${remainder} min` : `en ${hours} h`;
+  }
+
+  function renderSchedule() {
+    if (!timetable || selectedStationIndex === null) return;
+
+    const now = new Date();
+    const station = timetable.stations[selectedStationIndex];
+    const destination = directionLabels[direction];
+    const dayLabel = dayMode.value === "auto"
+      ? timetable.dayTypes[getServiceDay(now)]
+      : `${timetable.dayTypes[dayMode.value]} · selección manual`;
+    const departures = getUpcomingDepartures(now);
+
+    stationTitle.textContent = station;
+    byId("local-clock").innerHTML = `Hora local <span class="clock-reading">${new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(now)}</span>`;
+    setStatus(`${dayLabel} · hacia ${destination}`, true);
+
+    if (!departures.length) {
+      results.innerHTML = '<div class="empty"><strong>No encontramos horarios futuros</strong>Revisa el día de servicio seleccionado o consulta el PDF de referencia.</div>';
+      return;
+    }
+
+    results.innerHTML = `<div class="arrivals">${departures.map((departure) => {
+      const wait = Math.max(0, Math.ceil((departure.departureAt.getTime() - now.getTime()) / 60000));
+      return `<article class="arrival">
+        <div class="time">${escapeHtml(departure.time)}</div>
+        <div><div class="destination">Tren ${escapeHtml(departure.train)} · hacia ${escapeHtml(destination)}</div>
+        <div class="arrival-date">${escapeHtml(departure.dayLabel)} · ${escapeHtml(timetable.dayTypes[departure.serviceDay])}</div></div>
+        <div class="countdown"><strong>${escapeHtml(formatWait(wait))}</strong>horario previsto</div>
+      </article>`;
+    }).join("")}</div>`;
+  }
+
+  function updateDirectionButtons(activeButton) {
+    document.querySelectorAll("[data-direction]").forEach((button) => {
+      const isSelected = button === activeButton;
+      button.setAttribute("aria-pressed", String(isSelected));
+      button.classList.toggle("selected-direction", isSelected);
+    });
+  }
+
+  async function loadTimetable() {
+    try {
+      const response = await fetch("data/schedule.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      timetable = await response.json();
+      if (timetable.stations.length !== 23) throw new Error("La tabla no tiene 23 estaciones.");
+      setStatus(`Horario ${timetable.source.title} cargado · ${timetable.stations.length} estaciones`, true);
+    } catch (error) {
+      setStatus("No se pudo cargar el horario local.");
+      results.innerHTML = '<div class="error"><strong>No pudimos abrir la tabla de horarios.</strong><br>Comprueba que src/data/schedule.json esté en la carpeta del proyecto.</div>';
+    }
+  }
+
+  byId("search-button").addEventListener("click", searchStation);
+  stationInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") searchStation();
+  });
+  document.querySelectorAll("[data-query]").forEach((button) => {
+    button.addEventListener("click", () => {
+      stationInput.value = button.dataset.query;
+      searchStation();
+    });
+  });
+  document.querySelectorAll("[data-direction]").forEach((button) => {
+    button.addEventListener("click", () => {
+      direction = button.dataset.direction;
+      updateDirectionButtons(button);
+      renderSchedule();
+    });
+  });
+  dayMode.addEventListener("change", renderSchedule);
+
+  if (document.modelContext?.registerTool) {
+    const controller = new AbortController();
+    try {
+      document.modelContext.registerTool({
+        name: "select_belgrano_norte_station",
+        title: "Consultar próximo tren",
+        description: "Elige una estación del Belgrano Norte y muestra los siguientes horarios programados desde el reloj local del dispositivo.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            station: { type: "string", description: "Nombre de una estación" },
+            direction: { type: "string", enum: ["towardVillaRosa", "towardRetiro"] },
+            serviceDay: { type: "string", enum: ["auto", "weekday", "saturday", "sundayHoliday"] },
+          },
+          required: ["station"],
+          additionalProperties: false,
+        },
+        annotations: { readOnlyHint: true, untrustedContentHint: true },
+        async execute(input) {
+          if (!timetable) await loadTimetable();
+          if (input.direction) {
+            direction = input.direction;
+            const directionButton = document.querySelector(`[data-direction="${direction}"]`);
+            if (directionButton) updateDirectionButtons(directionButton);
+          }
+          if (input.serviceDay) dayMode.value = input.serviceDay;
+          stationInput.value = String(input.station || "");
+          searchStation();
+          return { station: stationTitle.textContent, direction, departures: results.innerText.slice(0, 1200) };
+        },
+      }, { signal: controller.signal });
+    } catch {
+      // WebMCP is optional; the visible controls continue to work.
+    }
+  }
+
+  loadTimetable().then(() => {
+    window.setInterval(renderSchedule, 30_000);
+  });
+})();
