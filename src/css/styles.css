@@ -20,4 +20,8 @@
 
     .brand-footer{padding:18px 8px 0;text-align:center;color:#929baa;font-size:10px;letter-spacing:.08em}.brand-footer strong{color:#526176;font-weight:800}
 
+    .destination{font-size:16px}.arrival-date{font-size:13px;line-height:1.35}.countdown span{font-size:13px}.feedstatus{font-size:13px;line-height:1.4}
+
+    @media(max-width:760px){.destination{font-size:15px;line-height:1.35}.arrival-date{font-size:12px}.countdown span{font-size:12px}.feedstatus{font-size:12px}}
+
     @media(max-width:760px){.station-name-row{gap:5px}.station-name-row .station-name{font-size:clamp(17px,5.5vw,21px);overflow-wrap:anywhere}.station-name-row .favorite-toggle{flex-basis:32px;width:32px;height:32px;font-size:21px}.refresh{font-size:15px;padding:6px 7px}}
