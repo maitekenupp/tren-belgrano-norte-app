@@ -157,6 +157,7 @@
     byId("local-clock").textContent = new Intl.DateTimeFormat("es-AR", {
       hour: "2-digit",
       minute: "2-digit",
+      second: "2-digit",
       hourCycle: "h23",
     }).format(now);
     setStatus(`${dayLabel} · hacia ${destination}`, true);
@@ -184,6 +185,7 @@
       button.setAttribute("aria-pressed", String(isSelected));
       button.classList.toggle("selected-direction", isSelected);
     });
+    byId("settings-direction").textContent = `Hacia ${directionLabels[direction]}`;
   }
 
   async function loadTimetable() {
