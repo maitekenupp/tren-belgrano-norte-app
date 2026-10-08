@@ -5,6 +5,9 @@
   const favoriteStations = byId("favorite-stations");
   const results = byId("results");
   const stationTitle = byId("station-title");
+  const fullSchedule = byId("full-schedule");
+  const fullTimes = byId("full-times");
+  const fullTabs = Array.from(document.querySelectorAll("[data-full-day]"));
   const status = byId("feed-status");
   const dayMode = byId("day-mode");
 
@@ -21,6 +24,7 @@
   let timetable = null;
   let selectedStationIndex = null;
   let direction = "towardVillaRosa";
+  let fullScheduleDay = null;
   const favoritesKey = "anden-belgrano-norte-favorites";
   let favorites = loadFavorites();
 
@@ -66,6 +70,7 @@
     updateFavoriteControls();
     if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
     renderSchedule();
+    renderFullSchedule();
   }
 
   function updateFavoriteControls() {
@@ -179,6 +184,30 @@
     }).join("")}</div>`;
   }
 
+  function renderFullSchedule(now = new Date()) {
+    if (!timetable || selectedStationIndex === null) {
+      fullSchedule.hidden = true;
+      return;
+    }
+
+    const activeDay = fullScheduleDay || getServiceDay(now);
+    fullSchedule.hidden = false;
+    fullTabs.forEach((tab) => {
+      const isSelected = tab.dataset.fullDay === activeDay;
+      tab.setAttribute("aria-selected", String(isSelected));
+      tab.tabIndex = isSelected ? 0 : -1;
+      tab.classList.toggle("active-tab", isSelected);
+    });
+    byId("full-schedule-panel").setAttribute("aria-labelledby", fullTabs.find((tab) => tab.dataset.fullDay === activeDay).id);
+
+    const times = [...new Set(timetable.days[activeDay][direction]
+      .map((service) => service.times[selectedStationIndex])
+      .filter(Boolean))].sort();
+    fullTimes.innerHTML = times.length
+      ? times.map((time) => `<time class="full-time" datetime="${time}">${escapeHtml(time)}</time>`).join("")
+      : '<p class="full-empty">No hay horarios para esta estación y este sentido.</p>';
+  }
+
   function updateDirectionButtons(activeButton) {
     document.querySelectorAll("[data-direction]").forEach((button) => {
       const isSelected = button === activeButton;
@@ -213,6 +242,7 @@
       stationTitle.textContent = "Elige una estación";
       results.innerHTML = '<div class="empty"><strong>Tu tren, desde tu estación</strong>Selecciona una parada para ver las próximas salidas según el horario local de tu dispositivo.</div>';
       updateFavoriteControls();
+      renderFullSchedule();
       return;
     }
     chooseStation(Number(stationSelect.value));
@@ -223,9 +253,27 @@
       direction = button.dataset.direction;
       updateDirectionButtons(button);
       renderSchedule();
+      renderFullSchedule();
     });
   });
-  dayMode.addEventListener("change", renderSchedule);
+  fullTabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => {
+      fullScheduleDay = tab.dataset.fullDay;
+      renderFullSchedule();
+    });
+    tab.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      const offset = event.key === "ArrowRight" ? 1 : -1;
+      const nextTab = fullTabs[(index + offset + fullTabs.length) % fullTabs.length];
+      nextTab.focus();
+      nextTab.click();
+    });
+  });
+  dayMode.addEventListener("change", () => {
+    renderSchedule();
+    renderFullSchedule();
+  });
 
   if (document.modelContext?.registerTool) {
     const controller = new AbortController();

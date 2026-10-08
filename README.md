@@ -78,6 +78,7 @@ tren-belgrano-norte-app/
 - Em modo automático, escolhe dias úteis, sábado ou domingo pelo calendário local.
 - Em feriados que caem durante a semana, selecione manualmente **Domingo o feriado**. O app não consulta um calendário online.
 - A lista mostra os próximos quatro horários da estação e do sentido escolhidos, incluindo minutos restantes.
+- Abaixo da lista, **Horario completo** permite consultar todos os horários daquela estação e sentido, em abas de dias úteis, sábado e domingo/feriados. A tabela mostra somente as horas, sem números de trem.
 - Os horários são os programados no **Horario N° 21**, vigente desde 19/05/2026. Não são posições do trem nem previsão de atraso em tempo real.
 
 ## Atualizar a tabela a partir de outro PDF
