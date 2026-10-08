@@ -1,26 +1,26 @@
 # Andén — Belgrano Norte
 
-[![Abrir app](https://img.shields.io/badge/demo-abrir%20app-2563eb)](https://tren-belgrano-norte-app.pages.dev)
-[![Licença: MIT](https://img.shields.io/badge/licença-MIT-green.svg)](LICENSE) · [Código no GitHub](https://github.com/maitekenupp/tren-belgrano-norte-app)
+[![Open the app](https://img.shields.io/badge/demo-open%20app-2563eb)](https://tren-belgrano-norte-app.pages.dev)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) · [GitHub repository](https://github.com/maitekenupp/tren-belgrano-norte-app)
 
-Andén é um app web independente para consultar mais rápido os horários previstos do trem Belgrano Norte. A ideia é ver tanto as próximas partidas de uma estação quanto os horários futuros de uma viagem entre duas estações, sem precisar procurar manualmente em uma tabela extensa.
+Andén is an independent web app designed to make Belgrano Norte train schedules quicker to check. It shows upcoming departures from a selected station and lets you look up future timetable entries for a trip between two stations, without searching through a long timetable by hand.
 
-> **Abrir o app:** [tren-belgrano-norte-app.pages.dev](https://tren-belgrano-norte-app.pages.dev)
+> **Open the app:** [tren-belgrano-norte-app.pages.dev](https://tren-belgrano-norte-app.pages.dev)
 >
-> Os horários são programados e vêm da tabela local do projeto. O app não recebe dados de posição nem informações de atraso em tempo real. Confira sempre as informações oficiais antes de viajar.
+> The app uses scheduled timetable data stored in the project. It does not receive live train positions or delay predictions. Check official information before traveling.
 
-## O que dá para fazer
+## Features
 
-- Ver as próximas partidas a partir de uma estação, considerando o relógio local do dispositivo.
-- Consultar horários futuros de uma estação por dia de serviço: dias úteis, sábados e domingos/feriados.
-- Escolher origem e destino para comparar a hora de saída e a hora prevista de chegada.
-- Corrigir automaticamente o sentido do trem de acordo com a ordem das estações.
-- Salvar estações favoritas no navegador.
-- Usar o layout em computador ou celular.
+- View upcoming departures from a station using the device's local clock.
+- Browse future schedules by service day: weekdays, Saturdays, and Sundays/holidays.
+- Choose an origin and destination to compare scheduled departure and arrival times.
+- Automatically select the train direction based on station order.
+- Save favorite stations in the browser.
+- Use the responsive interface on desktop and mobile.
 
-## Rodar localmente
+## Run locally
 
-**Requisitos:** Node.js 18 ou superior. O app não usa dependências externas.
+**Requirements:** Node.js 18 or later. The app has no external dependencies.
 
 ```bash
 git clone https://github.com/maitekenupp/tren-belgrano-norte-app.git
@@ -28,22 +28,22 @@ cd tren-belgrano-norte-app
 npm run dev
 ```
 
-Abra [http://localhost:4173](http://localhost:4173). Para encerrar o servidor, pressione `Ctrl+C` no terminal.
+Open [http://localhost:4173](http://localhost:4173). Press `Ctrl+C` in the terminal to stop the server.
 
-Para testar pelo celular na mesma rede Wi-Fi, abra o endereço de rede local mostrado pelo servidor no terminal, mantendo o computador ligado e o servidor ativo.
+To test on a phone connected to the same Wi-Fi network, open the local network address printed by the server in your terminal. Keep the computer and server running while testing.
 
-## Como os horários funcionam
+## How the timetable works
 
-A tabela está em `src/data/schedule.json`, organizada por estação, sentido e dia de serviço. O app compara essas horas com o relógio do dispositivo para calcular a contagem regressiva e exibe as partidas futuras. A comparação origem-destino usa os horários previstos do mesmo trem nas duas estações.
+The timetable is stored in `src/data/schedule.json`, organized by station, direction, and service day. The app compares these scheduled times with the device's local clock to calculate countdowns and show future departures. Origin-to-destination results use the scheduled times for the same train at both stations.
 
-Os horários atualmente incluídos foram transcritos do **Horario N° 21**, com vigência indicada a partir de 19/05/2026. Eles não representam o movimento real dos trens e podem ficar desatualizados.
+The data currently included was transcribed from **Horario N° 21**, which states an effective date of May 19, 2026. These are scheduled times, not live train movements, and the timetable may become outdated.
 
-## Tecnologias
+## Built with
 
-- HTML, CSS e JavaScript sem framework
-- Node.js com módulos nativos para servir o app localmente
-- JSON para a tabela de horários
+- HTML, CSS, and vanilla JavaScript
+- Node.js built-in modules for the local development server
+- JSON timetable data
 
-## Licença
+## License
 
-O código original do app é distribuído sob a licença MIT: você pode usar, copiar, modificar e redistribuí-lo conforme os termos de [LICENSE](LICENSE). O arquivo `src/data/schedule.json` contém horários transcritos de uma tabela ferroviária de terceiros; confirme as condições da fonte original antes de reutilizar ou redistribuir esses dados.
+The original app code is released under the MIT License. You may use, copy, modify, and redistribute it under the terms in [LICENSE](LICENSE). `src/data/schedule.json` contains timetable entries transcribed from a third-party railway schedule; check the original source's terms before reusing or redistributing that data.
