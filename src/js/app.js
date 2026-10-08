@@ -12,6 +12,8 @@
   const status = byId("feed-status");
   const dayMode = byId("day-mode");
 
+  if (window.matchMedia("(max-width: 760px)").matches) byId("station-settings").open = false;
+
   const directionLabels = {
     towardVillaRosa: "Villa Rosa",
     towardRetiro: "Retiro",
@@ -157,9 +159,16 @@
   }
 
   function renderSchedule() {
+    const now = new Date();
+    byId("local-clock").textContent = new Intl.DateTimeFormat("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).format(now);
+
     if (!timetable || selectedStationIndex === null) return;
 
-    const now = new Date();
     const station = timetable.stations[selectedStationIndex];
     const destination = directionLabels[direction];
     const dayLabel = dayMode.value === "auto"
@@ -168,12 +177,6 @@
     const departures = getUpcomingDepartures(now);
 
     stationTitle.textContent = station;
-    byId("local-clock").textContent = new Intl.DateTimeFormat("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hourCycle: "h23",
-    }).format(now);
     setStatus(`${dayLabel} · hacia ${destination}`, true);
 
     if (!departures.length) {
@@ -329,7 +332,7 @@
     }
   }
 
-  loadTimetable().then(() => {
-    window.setInterval(renderSchedule, 1_000);
-  });
+  renderSchedule();
+  window.setInterval(renderSchedule, 1_000);
+  loadTimetable();
 })();
